@@ -1,6 +1,6 @@
-# 📊 TDCC 集保股權分散統計工具 (TDCC-HoldingRatio-TS)
+# 📊 TDCC 集保股權分散統計工具 (TDCC-HoldingRatio)
 
-[![GitHub License](https://img.shields.io/github/license/Yuno-Liu/TDCC-HoldingRatio-TS)](LICENSE)
+[![GitHub License](https://img.shields.io/github/license/Yuno-Liu/TDCC-HoldingRatio)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Manifest V3](https://img.shields.io/badge/Chrome%20Extension-Manifest%20V3-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen?logo=node.js&logoColor=white)](tests/)
@@ -33,8 +33,8 @@
 
 1. 複製專案並安裝相依套件：
    ```bash
-   git clone https://github.com/Yuno-Liu/TDCC-HoldingRatio-TS.git
-   cd TDCC-HoldingRatio-TS
+   git clone https://github.com/Yuno-Liu/TDCC-HoldingRatio.git
+   cd TDCC-HoldingRatio
    npm install
    npm run build
    ```
@@ -85,7 +85,7 @@ npm run clean
 ## 📂 專案結構
 
 ```
-TDCC-HoldingRatio-TS/
+TDCC-HoldingRatio/
 ├── src/
 │   ├── content.ts              # Content Script 主入口
 │   ├── config/
@@ -113,3 +113,4 @@ TDCC-HoldingRatio-TS/
 ## 📜 授權協議 (License)
 
 本專案採用 [MIT License](LICENSE) 授權。
+

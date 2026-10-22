@@ -1,5 +1,5 @@
 {
-    "name": "tdcc-holdingratio-ts",
+    "name": "tdcc-holdingratio",
     "version": "1.0.0",
     "type": "module",
     "description": "TDCC 持股比例統計工具 - TypeScript 版本",
@@ -26,3 +26,4 @@
     "author": "",
     "license": "MIT"
 }
+
