@@ -1,20 +1,21 @@
 {
     "name": "tdcc-holdingratio",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "type": "module",
-    "description": "TDCC 持股比例統計工具 - TypeScript 版本",
+    "description": "TDCC 集保戶股權分散表 大戶／中實戶／散戶持股比例統計 Chrome 擴充功能",
     "scripts": {
         "build": "esbuild src/content.ts --bundle --outfile=dist/content.js --format=iife --target=es2020 && npm run copy:assets",
-        "copy:assets": "node -e \"const fs=require('fs'); fs.copyFileSync('manifest.json', 'dist/manifest.json');\"",
+        "copy:assets": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.copyFileSync('manifest.json', 'dist/manifest.json');\"",
         "watch": "esbuild src/content.ts --bundle --outfile=dist/content.js --format=iife --target=es2020 --watch",
-        "clean": "rimraf dist/*.js dist/*.js.map dist/*.json dist-test/**/*",
+        "clean": "rimraf dist dist-test",
         "typecheck": "tsc --noEmit",
-        "build:test": "tsc -p tsconfig.test.json",
-        "test": "npm run build:test && node --test tests/*.test.mjs"
+        "build:test": "rimraf dist-test && tsc -p tsconfig.test.json",
+        "test": "npm run build:test && npm run build && node --test \"tests/*.test.mjs\""
     },
     "devDependencies": {
         "@types/chrome": "^0.0.287",
         "esbuild": "^0.27.4",
+        "jsdom": "^30.1.3",
         "rimraf": "^6.0.1",
         "typescript": "^5.7.2"
     },
@@ -24,6 +25,8 @@
         "typescript"
     ],
     "author": "",
-    "license": "MIT"
+    "license": "MIT",
+    "engines": {
+        "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+    }
 }
-

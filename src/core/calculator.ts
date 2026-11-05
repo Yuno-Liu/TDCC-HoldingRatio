@@ -1,75 +1,144 @@
-import type { StockLevelData, Totals } from "../types/index.js";
+import { CONFIG } from "../config/constants.js";
+import type { Distribution, GroupTotals, ParseResult, StockLevelData } from "../types/index.js";
 
 /**
- * 將數值限制在 0 到 100 的百分比範圍內
- * 常用於安全設定 CSS 進度條寬度，避免無效值或超出邊界
- * 
- * @param value - 待限制的數值
- * @returns 限制在 [0, 100] 區間內的數值；若傳入非有限數字（NaN/Infinity）則回傳 0
+ * 正規化散戶與大戶門檻，保證兩個族群不重疊：
+ * 1 <= retailLevel < whaleLevel <= 15
+ *
+ * 若兩者衝突 (retailLevel >= whaleLevel)，以 `prefer` 指定的一方為準並調整另一方
+ *
+ * @param retailLevel - 散戶門檻 (級距 <= 此值為散戶)
+ * @param whaleLevel - 大戶門檻 (級距 >= 此值為大戶)
+ * @param prefer - 發生衝突時保留哪一方的設定 (預設保留大戶門檻)
+ * @returns 正規化後的門檻
  */
-export function clampPercentage(value: number): number {
-    if (!Number.isFinite(value)) {
-        return 0;
+export function normalizeThresholds(
+    retailLevel: number,
+    whaleLevel: number,
+    prefer: "retail" | "whale" = "whale",
+): { retailLevel: number; whaleLevel: number } {
+    const { minLevel, maxLevel, defaultRetailLevel, defaultWhaleLevel } = CONFIG;
+    const toLevel = (value: number, fallback: number, min: number, max: number): number =>
+        Number.isFinite(value) ? Math.min(Math.max(Math.trunc(value), min), max) : fallback;
+
+    let retail = toLevel(retailLevel, defaultRetailLevel, minLevel, maxLevel - 1);
+    let whale = toLevel(whaleLevel, defaultWhaleLevel, minLevel + 1, maxLevel);
+
+    if (retail >= whale) {
+        if (prefer === "retail") {
+            whale = retail + 1;
+        } else {
+            retail = whale - 1;
+        }
     }
 
-    return Math.min(Math.max(value, 0), 100);
+    return { retailLevel: retail, whaleLevel: whale };
 }
 
 /**
- * 將人數格式化為帶有千分位逗號的顯示字串
- * 
- * @param value - 人數數值
- * @returns 格式化後的字串（例如: "12,345 人"），若非有效非負數則回傳 "-- 人"
+ * 計算指定級距範圍內的人數、股數與比例
  */
-export function formatHolders(value: number): string {
-    if (!Number.isFinite(value) || value < 0) {
-        return "-- 人";
+function sumGroup(
+    levels: readonly StockLevelData[],
+    range: [number, number] | null,
+    method: "shares" | "percent",
+    totalShares: number | null,
+    totalHolders: number,
+): GroupTotals {
+    let holders = 0;
+    let shares = 0;
+    let percentSum = 0;
+
+    if (range) {
+        const [from, to] = range;
+
+        for (const item of levels) {
+            if (item.level < from || item.level > to) {
+                continue;
+            }
+
+            holders += item.holders;
+            shares += item.shares ?? 0;
+            percentSum += item.percent ?? 0;
+        }
     }
 
-    return `${Math.round(value).toLocaleString("en-US")} 人`;
-}
-
-/**
- * 依據指定的散戶門檻與大戶門檻，計算各自分類的持股比例與人數總和
- * 
- * - 散戶合計：所有 level <= retailLevel 的持股比例與人數總和
- * - 大戶合計：所有 level >= whaleLevel 的持股比例與人數總和
- * - 總股東人數：所有級距的人數總和
- * 
- * @param data - TDCC 級距資料陣列
- * @param retailLevel - 散戶判定上限級距 (含)
- * @param whaleLevel - 大戶判定下限級距 (含)
- * @returns 包含散戶與大戶合計比例、人數及總人數的計算結果
- */
-export function calculateTotals(data: StockLevelData[], retailLevel: number, whaleLevel: number): Totals {
-    let retailTotal = 0;
-    let whaleTotal = 0;
-    let retailHolders = 0;
-    let whaleHolders = 0;
-    let totalHolders = 0;
-
-    data.forEach((item) => {
-        const holders = Number.isFinite(item.holders) ? item.holders : 0;
-        totalHolders += holders;
-
-        // 判定為散戶：級距編號小於等於指定散戶門檻
-        if (item.level <= retailLevel) {
-            retailTotal += item.percent;
-            retailHolders += holders;
-        }
-
-        // 判定為大戶：級距編號大於等於指定大戶門檻
-        if (item.level >= whaleLevel) {
-            whaleTotal += item.percent;
-            whaleHolders += holders;
-        }
-    });
+    const percent = method === "shares" && totalShares ? (shares / totalShares) * 100 : percentSum;
 
     return {
-        retailTotal,
-        whaleTotal,
-        retailHolders,
-        whaleHolders,
+        range,
+        percent,
+        holders,
+        holderRatio: totalHolders > 0 ? (holders / totalHolders) * 100 : null,
+        shares: method === "shares" ? shares : null,
+    };
+}
+
+/**
+ * 決定比例計算的分母 (合計股數)
+ *
+ * 1. 優先使用 TDCC「合計」列股數 (= 1~15 級股數 + 差異數調整，TDCC 比例欄即以此為分母)
+ * 2. 合計列缺漏時，以 1~15 級股數加總再加上差異數調整推算
+ */
+function resolveTotalShares(parsed: Pick<ParseResult, "levels" | "total" | "adjustment">): number | null {
+    const totalRowShares = parsed.total?.shares ?? null;
+
+    if (totalRowShares !== null && totalRowShares > 0) {
+        return totalRowShares;
+    }
+
+    const derived = parsed.levels.reduce((sum, item) => sum + (item.shares ?? 0), 0) + (parsed.adjustment?.shares ?? 0);
+    return derived > 0 ? derived : null;
+}
+
+/**
+ * 依據散戶與大戶門檻，計算大戶、中實戶、散戶三個族群的持股比例與人數
+ *
+ * - 散戶：級距 1 ~ retailLevel
+ * - 中實戶：級距 retailLevel+1 ~ whaleLevel-1 (介於兩門檻之間，可能為空)
+ * - 大戶：級距 whaleLevel ~ 15
+ *
+ * 比例計算方式：
+ * - 所有級距皆有股數時，以「族群股數 ÷ 合計股數 × 100」精算。
+ *   TDCC 比例欄位是「無條件捨去」至小數第 2 位 (以 2026/10/30 全市場 61,665 個欄位驗證)，
+ *   直接加總會讓每個級距少算 0 ~ 0.01 個百分點，族群涵蓋的級距越多低估越多 (散戶 9 個級距最多約 0.09)
+ * - 分母使用「合計」列股數，與 TDCC「占集保庫存數比例」欄位的分母一致
+ * - 股數資料不完整時，退回加總比例欄位
+ *
+ * @param parsed - 股權分散表解析結果 (至少需包含 levels，可選 total 與 adjustment)
+ * @param retailLevel - 散戶門檻
+ * @param whaleLevel - 大戶門檻
+ * @returns 三個族群的統計結果
+ */
+export function calculateDistribution(
+    parsed: Pick<ParseResult, "levels"> & Partial<Pick<ParseResult, "total" | "adjustment">>,
+    retailLevel: number,
+    whaleLevel: number,
+): Distribution {
+    const thresholds = normalizeThresholds(retailLevel, whaleLevel);
+    const levels = parsed.levels;
+    const source = { levels, total: parsed.total ?? null, adjustment: parsed.adjustment ?? null };
+
+    const allSharesKnown = levels.length > 0 && levels.every((item) => item.shares !== null);
+    const totalShares = allSharesKnown ? resolveTotalShares(source) : null;
+    const method = totalShares !== null ? "shares" : "percent";
+
+    const levelHolders = levels.reduce((sum, item) => sum + item.holders, 0);
+    const totalRowHolders = source.total?.holders ?? null;
+    const totalHolders = totalRowHolders !== null && totalRowHolders > 0 ? totalRowHolders : levelHolders;
+
+    const { retailLevel: retail, whaleLevel: whale } = thresholds;
+    const middleRange: [number, number] | null = whale - retail > 1 ? [retail + 1, whale - 1] : null;
+
+    return {
+        retailLevel: retail,
+        whaleLevel: whale,
+        whale: sumGroup(levels, [whale, CONFIG.maxLevel], method, totalShares, totalHolders),
+        middle: sumGroup(levels, middleRange, method, totalShares, totalHolders),
+        retail: sumGroup(levels, [CONFIG.minLevel, retail], method, totalShares, totalHolders),
         totalHolders,
+        totalShares,
+        method,
+        levelCount: levels.length,
     };
 }

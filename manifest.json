@@ -1,14 +1,19 @@
 {
     "manifest_version": 3,
     "name": "TDCC 持股比例統計工具",
-    "version": "1.0.0",
-    "description": "TDCC 集保持股比例統計，支援散戶/大戶級距、百分比進度條與自動更新",
-    "permissions": [],
-    "host_permissions": ["https://www.tdcc.com.tw/*"],
+    "version": "1.1.0",
+    "description": "TDCC 集保戶股權分散表：依股數精算大戶、中實戶、散戶持股比例與人數，門檻可自訂並自動保存",
+    "permissions": [
+        "storage"
+    ],
     "content_scripts": [
         {
-            "matches": ["https://www.tdcc.com.tw/portal/zh/smWeb/qryStock*"],
-            "js": ["content.js"],
+            "matches": [
+                "https://www.tdcc.com.tw/portal/zh/smWeb/qryStock*"
+            ],
+            "js": [
+                "content.js"
+            ],
             "run_at": "document_idle"
         }
     ]
