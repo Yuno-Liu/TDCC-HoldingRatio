@@ -1,298 +1,571 @@
-import { STYLE_ID } from "../config/constants.js";
+import { CONFIG } from "../config/constants.js";
 
 /**
- * 統計面板的 CSS 樣式定義
- * 包含面板外觀、標題列漸層、下拉選單、進度條動畫及 RWD 響應式佈局
+ * 統計面板的 CSS 樣式 (注入於 Shadow DOM 內，與 TDCC 頁面樣式完全隔離)
+ *
+ * 色彩對比 (WCAG AA，白底)：
+ * - 主要文字 #1e293b 14.6:1、次要文字 #475569 7.6:1、輔助文字 #64748b 4.8:1、控制項邊框 #7c8b9d 3.5:1
+ * - 標題列白字於 #1e4f91 ~ #2a64b0 漸層 >= 5.9:1
+ * - 大戶 #b45309 5.0:1、中實戶 #0f766e 5.5:1、散戶 #1d4ed8 6.7:1
  */
-const PANEL_STYLES = `
-/* 浮動面板容器主體 */
-#stk-helper-panel {
+export const PANEL_STYLES = `
+:host {
+    all: initial;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.panel {
+    --stk-bg: #ffffff;
+    --stk-surface: #f8fafc;
+    --stk-border: #dbe3ee;
+    --stk-divider: #e8edf3;
+    --stk-text: #1e293b;
+    --stk-muted: #475569;
+    --stk-subtle: #64748b;
+    --stk-accent: #2f6fc0;
+    --stk-focus: #2563eb;
+    /* 表單控制項邊框：對白底 3.5:1 (WCAG 1.4.11 非文字對比 >= 3:1) */
+    --stk-control-border: #7c8b9d;
+    --stk-whale: #b45309;
+    --stk-whale-bar: #d97706;
+    --stk-middle: #0f766e;
+    --stk-middle-bar: #0d9488;
+    --stk-retail: #1d4ed8;
+    --stk-retail-bar: #3b82f6;
+    --stk-warn-bg: #fffbeb;
+    --stk-warn-text: #92400e;
+
     position: fixed;
-    top: 80px;
+    /* 位於 TDCC 主選單 (y 65 ~ 115) 下方，避免遮住導覽列 */
+    top: ${CONFIG.defaultTopPx}px;
     right: 20px;
-    z-index: 999999;
-    width: 300px;
-    background: #ffffff;
-    border: 1px solid #d9e2f0;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", sans-serif;
-    color: #263238;
-    overflow: hidden;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-#stk-helper-panel:hover {
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16), 0 3px 8px rgba(0, 0, 0, 0.08);
-}
-
-/* 標題列區域 */
-.stk-header {
+    /* 高於 TDCC 頁首 (3) 與選單 (99)，低於 TDCC 彈窗 (999)、提示訊息 (1000) 與自動完成清單 */
+    z-index: 990;
+    width: min(320px, calc(100vw - 16px));
+    /* 依預設位置保留下邊距；拖曳後由程式依實際位置調整 */
+    max-height: calc(100vh - ${CONFIG.defaultTopPx + CONFIG.viewportMarginPx}px);
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 14px;
-    background: linear-gradient(135deg, #30589c, #4078c5);
-    color: #ffffff;
-    cursor: pointer;
+    flex-direction: column;
+    background: var(--stk-bg);
+    border: 1px solid var(--stk-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14), 0 2px 6px rgba(15, 23, 42, 0.06);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--stk-text);
+    text-align: left;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+.panel:hover {
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18), 0 3px 8px rgba(15, 23, 42, 0.08);
+}
+
+.panel.is-dragging {
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.24);
+    opacity: 0.96;
+}
+
+.panel.is-dragging,
+.panel.is-dragging * {
     user-select: none;
 }
 
-.stk-title-wrapper {
+/* 標題列 (點擊收合 / 拖曳移動) */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 10px 10px 14px;
+    background: linear-gradient(135deg, #1e4f91, #2a64b0);
+    color: #ffffff;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    flex: none;
+}
+
+.panel.is-dragging .header {
+    cursor: grabbing;
+}
+
+.title-wrap {
     display: flex;
     align-items: center;
     gap: 9px;
+    min-width: 0;
 }
 
-.stk-icon {
+.icon {
+    flex: none;
     width: 28px;
     height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     background: rgba(255, 255, 255, 0.18);
     border-radius: 7px;
     font-size: 15px;
 }
 
-.stk-title {
-    font-size: 15px;
+.title-text {
+    min-width: 0;
+}
+
+.title {
+    margin: 0;
+    font-size: 14px;
     font-weight: 700;
-    letter-spacing: 0.3px;
+    line-height: 1.3;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.stk-status {
-    margin-top: 2px;
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.78);
+.panel.is-collapsed .subtitle {
+    font-weight: 600;
 }
 
-/* 收合/展開箭頭按鈕 */
-.stk-toggle {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    font-size: 13px;
-    transition: transform 0.2s ease, background 0.2s ease;
+.subtitle {
+    margin: 1px 0 0;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
 }
 
-.stk-header:hover .stk-toggle {
-    background: rgba(255, 255, 255, 0.2);
+.icon-btn {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.12);
+    color: inherit;
+    cursor: pointer;
+    transition: background 0.15s ease;
 }
 
-/* 面板內容區域 */
-.stk-body {
-    padding: 16px;
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.24);
 }
 
-/* 收合狀態樣式 */
-#stk-helper-panel.stk-collapsed .stk-body {
-    display: none;
+.icon-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
 }
 
-#stk-helper-panel.stk-collapsed .stk-toggle {
+.chevron {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.2s ease;
+}
+
+.panel.is-collapsed .chevron {
     transform: rotate(-90deg);
 }
 
-/* 設定選項列 */
-.stk-row {
-    margin-bottom: 14px;
+/* 內容區 */
+.body {
+    padding: 14px 14px 12px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
-.stk-label {
+.panel.is-collapsed .body {
+    display: none;
+}
+
+.controls {
+    display: grid;
+    /* 大戶選項文字較長 (例如「> 1,000 張 · 千張大戶」)，給予較寬欄位避免截斷 */
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: 10px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.field-label {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
+    gap: 6px;
     font-size: 12px;
     font-weight: 600;
-    color: #52616b;
+    color: var(--stk-muted);
 }
 
-.stk-label-hint {
-    font-size: 10px;
-    font-weight: normal;
-    color: #9aa6b2;
+.field-hint {
+    font-weight: 400;
+    color: var(--stk-subtle);
 }
 
-.stk-select {
+select {
     width: 100%;
-    box-sizing: border-box;
-    padding: 8px 10px;
-    background: #ffffff;
-    border: 1px solid #d4dce7;
+    min-width: 0;
+    height: 32px;
+    margin: 0;
+    padding: 0 8px;
+    background: var(--stk-bg);
+    border: 1px solid var(--stk-control-border);
     border-radius: 7px;
-    color: #263238;
-    font-size: 13px;
-    outline: none;
+    color: var(--stk-text);
+    font: inherit;
+    font-size: 12.5px;
     cursor: pointer;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.stk-select:hover {
-    border-color: #9fb4d0;
+select:hover {
+    border-color: #475569;
 }
 
-.stk-select:focus {
-    border-color: #4078c5;
-    box-shadow: 0 0 0 3px rgba(64, 120, 197, 0.12);
+select:focus-visible {
+    outline: 2px solid var(--stk-focus);
+    outline-offset: 1px;
+    border-color: var(--stk-focus);
 }
 
-/* 計算結果卡片區域 */
-.stk-result {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 4px;
-    padding-top: 14px;
-    border-top: 1px solid #edf0f4;
+/* 門檻自動調整提示 */
+.adjust-hint {
+    margin: 8px 0 0;
+    font-size: 11.5px;
+    color: var(--stk-muted);
 }
 
-.stk-result-card {
-    padding: 11px 10px;
-    background: #f7f9fc;
-    border: 1px solid #e9eef5;
+.dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.dot.whale { background: var(--stk-whale-bar); }
+.dot.middle { background: var(--stk-middle-bar); }
+.dot.retail { background: var(--stk-retail-bar); }
+
+/* 狀態 / 警告訊息 */
+.notice {
+    margin: 12px 0 0;
+    padding: 8px 10px;
     border-radius: 8px;
+    background: var(--stk-surface);
+    border: 1px dashed var(--stk-border);
+    color: var(--stk-muted);
+    font-size: 12px;
 }
 
-.stk-result-header {
+.notice.is-warning {
+    background: var(--stk-warn-bg);
+    border: 1px solid #fde68a;
+    color: var(--stk-warn-text);
+}
+
+/* 分布條 */
+.results {
+    margin-top: 14px;
+}
+
+.bar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
+    width: 100%;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--stk-divider);
 }
 
-.stk-result-info {
+.seg {
+    display: block;
+    height: 100%;
+    width: 0;
+    transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.seg + .seg {
+    box-shadow: -1px 0 0 var(--stk-bg);
+}
+
+.seg.whale { background: var(--stk-whale-bar); }
+.seg.middle { background: var(--stk-middle-bar); }
+.seg.retail { background: var(--stk-retail-bar); }
+
+/* 族群統計列 */
+.groups {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 6px;
 }
 
-.stk-result-label {
-    font-size: 11px;
-    color: #77838f;
+.group {
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--stk-surface);
+    border: 1px solid var(--stk-divider);
+    border-left: 3px solid var(--group-bar);
 }
 
-.stk-val-holders {
-    font-size: 12px;
-    line-height: 1.2;
-    font-weight: 600;
-    color: #475569;
+.group.whale { --group-color: var(--stk-whale); --group-bar: var(--stk-whale-bar); }
+.group.middle { --group-color: var(--stk-middle); --group-bar: var(--stk-middle-bar); }
+.group.retail { --group-color: var(--stk-retail); --group-bar: var(--stk-retail-bar); }
+
+.group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
 }
 
-.stk-val-num {
-    font-size: 18px;
-    line-height: 1;
+.group-name {
+    flex: none;
+    font-size: 13px;
     font-weight: 700;
-    color: #2077ad;
-    transition: color 0.2s ease;
+    color: var(--group-color);
 }
 
-.stk-result-card.stk-whale .stk-val-num {
-    color: #b45309;
-}
-
-/* 進度條外框與填滿條 */
-.stk-progress {
-    width: 100%;
-    height: 7px;
+.group-range {
+    flex: 1;
+    min-width: 0;
+    font-size: 11.5px;
+    color: var(--stk-subtle);
+    white-space: nowrap;
     overflow: hidden;
-    background: #e8edf3;
-    border-radius: 999px;
+    text-overflow: ellipsis;
 }
 
-.stk-progress-bar {
-    width: 0%;
-    height: 100%;
-    border-radius: 999px;
-    transform-origin: left center;
-    transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-    background: linear-gradient(90deg, #4f8edc, #2077ad);
+.group-pct {
+    flex: none;
+    font-size: 18px;
+    line-height: 1.1;
+    font-weight: 700;
+    color: var(--group-color);
+    font-variant-numeric: tabular-nums;
 }
 
-.stk-whale .stk-progress-bar {
-    background: linear-gradient(90deg, #d97706, #b45309);
+.group-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 3px;
+    font-size: 11.5px;
+    color: var(--stk-muted);
+    font-variant-numeric: tabular-nums;
 }
 
-/* 進度條數值更新時的脈衝動畫 */
-.stk-progress-bar.stk-updated {
-    animation: stk-progress-pulse 0.45s ease;
+/* 級距明細 */
+.details {
+    margin-top: 10px;
+    border-top: 1px solid var(--stk-divider);
+    padding-top: 8px;
 }
 
-@keyframes stk-progress-pulse {
-    0% {
-        opacity: 0.65;
-    }
-
-    50% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 1;
-    }
+.details > summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--stk-muted);
+    padding: 2px 0;
+    border-radius: 4px;
 }
 
-/* 面板底部列 */
-.stk-footer {
+.details > summary:focus-visible {
+    outline: 2px solid var(--stk-focus);
+    outline-offset: 2px;
+}
+
+.level-table {
+    width: 100%;
+    margin-top: 6px;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.level-table th {
+    padding: 4px 4px;
+    font-weight: 600;
+    color: var(--stk-subtle);
+    text-align: right;
+    border-bottom: 1px solid var(--stk-divider);
+}
+
+.level-table td {
+    padding: 3px 4px;
+    text-align: right;
+    color: var(--stk-text);
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.level-table th:first-child,
+.level-table td:first-child {
+    text-align: left;
+}
+
+.level-table th:nth-child(2),
+.level-table td:nth-child(2) {
+    text-align: left;
+}
+
+.level-table tr.whale td:first-child { box-shadow: inset 3px 0 0 var(--stk-whale-bar); }
+.level-table tr.middle td:first-child { box-shadow: inset 3px 0 0 var(--stk-middle-bar); }
+.level-table tr.retail td:first-child { box-shadow: inset 3px 0 0 var(--stk-retail-bar); }
+
+.level-table td:first-child {
+    padding-left: 8px;
+}
+
+.level-table tfoot th,
+.level-table tfoot td {
+    padding: 4px 4px;
+    font-weight: 700;
+    border-bottom: 0;
+    border-top: 1px solid var(--stk-divider);
+}
+
+.level-table tfoot th {
+    padding-left: 8px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.level-table tr.group-total.whale { color: var(--stk-whale); }
+.level-table tr.group-total.middle { color: var(--stk-middle); }
+.level-table tr.group-total.retail { color: var(--stk-retail); }
+
+.level-table tr.group-total th,
+.level-table tr.group-total td {
+    color: inherit;
+}
+
+.level-table tr.group-total td:nth-child(2) {
+    font-weight: 400;
+    color: var(--stk-subtle);
+    white-space: nowrap;
+}
+.level-table tr.group-total.whale th { box-shadow: inset 3px 0 0 var(--stk-whale-bar); }
+.level-table tr.group-total.middle th { box-shadow: inset 3px 0 0 var(--stk-middle-bar); }
+.level-table tr.group-total.retail th { box-shadow: inset 3px 0 0 var(--stk-retail-bar); }
+
+.table-note {
+    margin: 6px 0 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--stk-subtle);
+}
+
+/* 底部列 */
+.footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 12px;
+    gap: 8px;
+    margin-top: 10px;
 }
 
-.stk-data-status {
-    font-size: 10px;
-    color: #9aa6b2;
-}
-
-.stk-refresh {
-    border: 0;
-    padding: 6px 9px;
-    background: #f0f4f9;
-    border-radius: 6px;
-    color: #52616b;
+.foot-status {
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: 11px;
+    color: var(--stk-subtle);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.actions {
+    display: flex;
+    flex: none;
+    gap: 6px;
+}
+
+.text-btn {
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--stk-control-border);
+    border-radius: 7px;
+    background: var(--stk-bg);
+    color: var(--stk-muted);
+    font: inherit;
+    font-size: 12px;
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.1s ease;
+    transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.stk-refresh:hover {
-    background: #e2eaf3;
+.text-btn:hover:not(:disabled) {
+    background: var(--stk-surface);
+    border-color: #475569;
 }
 
-.stk-refresh:active {
-    transform: scale(0.96);
+.text-btn:active:not(:disabled) {
+    transform: translateY(1px);
 }
 
-/* 小螢幕 RWD 支援 */
-@media (max-width: 600px) {
-    #stk-helper-panel {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        width: auto;
+.text-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.text-btn:focus-visible {
+    outline: 2px solid var(--stk-focus);
+    outline-offset: 2px;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .panel,
+    .panel *,
+    .panel *::before,
+    .panel *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* 面板寬度實際縮小 (視窗 < 336px) 時才改為單欄 */
+@media (max-width: 335px) {
+    .controls {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 列印 TDCC 頁面時不輸出面板 */
+@media print {
+    .panel {
+        display: none !important;
     }
 }
 `;
-
-/**
- * 將面板專用樣式注入到頁面 `<head>` 中
- * 會自動檢查是否已注入過，避免重複加入樣式標籤
- * 
- * @param doc - DOM Document 物件 (預設為全域 document)
- */
-export function injectStyles(doc: Document = document): void {
-    if (doc.getElementById(STYLE_ID) || !doc.head) {
-        return;
-    }
-
-    const style = doc.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = PANEL_STYLES;
-    doc.head.appendChild(style);
-}

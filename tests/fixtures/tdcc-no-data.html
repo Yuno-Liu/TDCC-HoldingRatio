@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<!-- 擷取自 https://www.tdcc.com.tw/portal/zh/smWeb/qryStock 實際回應的 <main> 區塊 (已移除 script 與 CSRF token) -->
+<html lang="zh-Hant">
+<head><meta charset="UTF-8"><title>集保戶股權分散表查詢</title></head>
+<body>
+<main role="main">
+    
+
+
+    
+
+
+
+
+    <div id="swiper-kv" class="swiper mySwiper">
+        <ul class="swiper-wrapper">
+            
+                <li class="swiper-slide">
+                    <div style="background-image: url(https://m.tdcc.com.tw/TDCCWEB/upload/4028c0b491b76d720191c55cc9660005.jpg);"></div>
+                </li>
+            
+        </ul>
+
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+    </div>
+
+
+    <a accesskey="c" href="#" class="accesskey c" title="主要內容區(C)" id="main">:::</a>
+    <div id="breadcrumb"></div>
+    <div class="page-title">
+        <h2>集保戶股權分散表</h2>
+        <ul class="tool">
+	        
+
+
+
+    <li><a class="print" href="#" title="列印">列印</a></li>
+    <li><a class="share fb" href="#" title="分享至Facebook">分享至Facebook (另開新視窗)</a></li>
+    <li><a class="share line"  href="#" title="分享至Line">分享至Line (另開新視窗)</a></li>    
+    <li><a class="share twitter" target="_blank" rel="noopener noreferrer" href="#" title="分享至Twitter (另開新視窗)">分享至Twitter</a></li>
+
+
+        </ul>
+    </div>
+    <div class="inquire inline m-t-30 m-b-15">
+        <form action="/portal/zh/smWeb/qryStock" method="post" name="form1" id="form1" >
+<input type="hidden" name="SYNCHRONIZER_TOKEN" value="00000000-0000-0000-0000-000000000000" id="SYNCHRONIZER_TOKEN" />
+<input type="hidden" name="SYNCHRONIZER_URI" value="/portal/zh/smWeb/qryStock" id="SYNCHRONIZER_URI" />
+            <input type="hidden" name="method" value="submit" id="method" />
+            
+                <input type="hidden" name="firDate" value="20261030" id="firDate" />
+            
+
+            <table width="100%" style="max-width: 700px;margin: auto;">
+                <tr>
+                    <td width="150">
+                        <label for="scaDate">資料日期</label>
+                    </td>
+                    <td width="550">
+                        <select name="scaDate" id="scaDate">
+                            
+                                <option value="20261030" selected>20261030</option>
+                            
+                                <option value="20261022" >20261022</option>
+                            
+                                <option value="20261016" >20261016</option>
+                            
+                                <option value="20261008" >20261008</option>
+                            
+                                <option value="20261002" >20261002</option>
+                            
+                                <option value="20260924" >20260924</option>
+                            
+                                <option value="20260918" >20260918</option>
+                            
+                                <option value="20260911" >20260911</option>
+                            
+                                <option value="20260904" >20260904</option>
+                            
+                                <option value="20260828" >20260828</option>
+                            
+                                <option value="20260821" >20260821</option>
+                            
+                                <option value="20260814" >20260814</option>
+                            
+                                <option value="20260807" >20260807</option>
+                            
+                                <option value="20260731" >20260731</option>
+                            
+                                <option value="20260724" >20260724</option>
+                            
+                                <option value="20260717" >20260717</option>
+                            
+                                <option value="20260709" >20260709</option>
+                            
+                                <option value="20260703" >20260703</option>
+                            
+                                <option value="20260626" >20260626</option>
+                            
+                                <option value="20260618" >20260618</option>
+                            
+                                <option value="20260612" >20260612</option>
+                            
+                                <option value="20260605" >20260605</option>
+                            
+                                <option value="20260529" >20260529</option>
+                            
+                                <option value="20260522" >20260522</option>
+                            
+                                <option value="20260515" >20260515</option>
+                            
+                                <option value="20260508" >20260508</option>
+                            
+                                <option value="20260430" >20260430</option>
+                            
+                                <option value="20260424" >20260424</option>
+                            
+                                <option value="20260417" >20260417</option>
+                            
+                                <option value="20260410" >20260410</option>
+                            
+                                <option value="20260402" >20260402</option>
+                            
+                                <option value="20260327" >20260327</option>
+                            
+                                <option value="20260320" >20260320</option>
+                            
+                                <option value="20260313" >20260313</option>
+                            
+                                <option value="20260306" >20260306</option>
+                            
+                                <option value="20260226" >20260226</option>
+                            
+                                <option value="20260213" >20260213</option>
+                            
+                                <option value="20260206" >20260206</option>
+                            
+                                <option value="20260130" >20260130</option>
+                            
+                                <option value="20260123" >20260123</option>
+                            
+                                <option value="20260116" >20260116</option>
+                            
+                                <option value="20260109" >20260109</option>
+                            
+                                <option value="20260102" >20260102</option>
+                            
+                                <option value="20251226" >20251226</option>
+                            
+                                <option value="20251219" >20251219</option>
+                            
+                                <option value="20251212" >20251212</option>
+                            
+                                <option value="20251205" >20251205</option>
+                            
+                                <option value="20251128" >20251128</option>
+                            
+                                <option value="20251121" >20251121</option>
+                            
+                                <option value="20251114" >20251114</option>
+                            
+                                <option value="20251107" >20251107</option>
+                            
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="sqlMethod" id="sqlStockNo" value="StockNo" checked>
+                        <label for="sqlStockNo">證券代號</label>
+                    </td>
+                    <td>
+                        <label for="StockNo" class="show-for-sr">請輸入證券代號</label>
+                        <input type="text" name="stockNo" id="StockNo" value="2330" placeholder="請輸入證券代號"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="sqlMethod" id="sqlStockName" value="StockName" >
+                        <label for="sqlStockName">證券名稱</label>
+                    </td>
+                    <td>
+                        <label for="StockName" class="show-for-sr">請輸入證券名稱</label>
+                        <input type="text" name="stockName" id="StockName" value="" placeholder="請輸入證券名稱">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"><input type="submit" value="查詢"></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
+    
+
+        <div>
+            <p>
+                證券代號：
+                <br>
+                證券名稱：
+            </p>
+            <span class="font" style="font-size: 0.813em;">資料日期：</span>
+        </div>
+
+        <div class="table-frame securities-overview m-t-20">
+            <div class="table-responsive" style="max-height:100%;">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>序</th>
+                        <th>持股/單位數分級</th>
+                        <th>人數</th>
+                        <th>股數/單位數</th>
+                        <th>占集保庫存數比例 (%)</th>
+                    </tr>
+                    </thead>
+                    
+                    <tr>
+                        <td align="center" colspan="5"><span class="font" style="color: #ff0000;">查無此資料</span></td>
+                    </tr>
+                    
+                </table>
+            </div>
+        </div>
+    
+
+    <div class="m-t-30">
+        <span class="font" style="font-size: 1em;">
+            說明：<br>
+            <ol>
+                <li>融資融券專戶、證交所借券劃撥專戶、借券擔保品專戶，與期交所標的證券繳交賣出買權保證金專戶、標的證券履約交割專戶、登錄專戶等各專戶部分，以該等專戶所載股數計算。</li>
+                <li>合計股數包含零股待領回或證券支付憑單之股數。</li>
+                <li>本歷史檔案資料自97年7月份起建置，資料保存期間為一年。</li>
+                
+            </ol>
+
+            <br>
+            <p style="color:red;">
+                註：<br/>
+                <ol style="color:red;">
+                    <li>若有多檔證券查詢需求，可至「本公司官網 ＞ 資料查詢/統計 ＞ 開放資料專區 ＞ 股務資訊 ＞ <a href="https://opendata.tdcc.com.tw/getOD.ashx?id=1-5" title="下載股權分散表.csv">股權分散表</a>」下載</li>
+                    <li>現行資料係以各集保戶每週最後一個營業日營業結束後，持有該有價證券之證券存摺登載餘額，經ID歸戶後編制而成，依持股分級之級距，呈現各級人數、股數及佔集保庫存比例(%)。</li>
+                </ol>
+            </p>
+        </span>
+    </div>
+</main>
+</body>
+</html>
